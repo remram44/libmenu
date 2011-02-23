@@ -282,6 +282,51 @@ menu_item_t *_libmenu_item_n(menu_item_t *items_f, int n)
     return items_f;
 }
 
+/* Trouve un item sélectionnable, avant celui spécifié si possible
+ * Si current_item est -1, retourne -1 */
+int _libmenu_selectable_item_before(menu_t *menu, int current_item)
+{
+    int pos = 0;
+    menu_item_t *item = menu->items_f;
+    int selected = -1;
+    if(current_item == -1 || !item)
+        return -1;
+    while(item && pos < current_item)
+    {
+        if(item->type != MENU_ITEM_LABEL)
+            selected = pos;
+        item = item->next;
+        pos++;
+    }
+
+    if(selected != -1)
+        return selected;
+    else
+        return current_item;
+}
+
+/* Trouve un item sélectionnable, après celui spécifié si possible
+ * Attention : current_item peut être -1 !*/
+int _libmenu_selectable_item_after(menu_t *menu, int current_item)
+{
+    int pos = current_item + 1;
+    menu_item_t *item;
+    if(current_item == -1)
+        item = menu->items_f;
+    else
+        item = _libmenu_item_n(menu->items_f, current_item)->next;
+
+    while(item)
+    {
+        if(item->type != MENU_ITEM_LABEL)
+            return pos;
+        item = item->next;
+        pos++;
+    }
+
+    return current_item;
+}
+
 menu_item_t *menu_wait(menu_t *menu, int timeout)
 {
     int c;
@@ -294,6 +339,8 @@ menu_item_t *menu_wait(menu_t *menu, int timeout)
         _libmenu_window = newwin(menu->win_h, menu->win_w,
                 menu->win_y, menu->win_x);
         keypad(_libmenu_window, TRUE);
+        /* Va au premier élément sélectionnable */
+        menu->item = _libmenu_selectable_item_after(menu, -1);
         _libmenu_drawmenu();
     }
 
@@ -305,18 +352,14 @@ menu_item_t *menu_wait(menu_t *menu, int timeout)
     switch(c)
     {
     case KEY_UP:
-        menu->item--;
-        if(menu->item < 0)
-            menu->item = 0;
+        menu->item = _libmenu_selectable_item_before(menu, menu->item);
         /* Scrolling */
-        if(menu->item < menu->scroll_pos)
+        if(menu->item != -1 && menu->item < menu->scroll_pos)
             menu->scroll_pos = menu->item;
         _libmenu_drawmenu();
         break;
     case KEY_DOWN:
-        menu->item++;
-        if(menu->item >= menu->nb_items)
-            menu->item = menu->nb_items - 1;
+        menu->item = _libmenu_selectable_item_after(menu, menu->item);
         /* Scrolling */
         if(menu->item >= menu->scroll_pos + menu->win_h-2)
             menu->item = menu->scroll_pos + menu->win_h - 3;
