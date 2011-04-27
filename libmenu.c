@@ -32,6 +32,7 @@
 #include <assert.h>
 
 static WINDOW *_libmenu_window = NULL;
+static int _libmenu_invalid = 1;
 
 struct _libmenu_menu {
     int win_w, win_h, win_x, win_y;
@@ -99,6 +100,8 @@ menu_t *menu_push(const char *title)
     menu->items_f = menu->items_l = NULL;
     menu->scroll_pos = 0;
 
+    _libmenu_invalid = 1;
+
     return menu;
 }
 
@@ -144,6 +147,8 @@ void menu_pop(menu_t *menu)
         menu_t *tmp = _libmenu_menus_l;
         _libmenu_menus_l = tmp->previous;
         free(tmp);
+
+        _libmenu_invalid = 1;
     }
     /* Il n'y a plus de menus -- désactivation de ncurses */
     else
@@ -199,6 +204,8 @@ menu_item_t *menu_newitem(menu_t *menu, unsigned int type)
         menu->nb_items++;
     }
 
+    _libmenu_invalid = 1;
+
     return item;
 }
 
@@ -227,6 +234,8 @@ void menu_setitem(menu_item_t *item, const char *format, ...)
         free(item->caption);
 
     item->caption = msg;
+
+    _libmenu_invalid = 1;
 }
 
 static void _libmenu_drawmenu()
@@ -341,7 +350,13 @@ menu_item_t *menu_wait(menu_t *menu, int timeout)
         keypad(_libmenu_window, TRUE);
         /* Va au premier élément sélectionnable */
         menu->item = _libmenu_selectable_item_after(menu, -1);
+        _libmenu_invalid = 1;
+    }
+
+    if(_libmenu_invalid)
+    {
         _libmenu_drawmenu();
+        _libmenu_invalid = 0;
     }
 
     if(timeout >= 0)
