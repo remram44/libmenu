@@ -250,6 +250,9 @@ static void _libmenu_drawmenu()
     for(i = 0; i < scroll; i++)
         item = item->next;
 
+    /* Efface la fenêtre */
+    werase(_libmenu_window);
+
     /* Affiche le titre */
     mvwprintw(_libmenu_window,
             menu->win_y, menu->win_x + (menu->win_w - strlen(menu->title))/2,
@@ -284,7 +287,7 @@ static void _libmenu_drawmenu()
     wrefresh(_libmenu_window);
 }
 
-menu_item_t *_libmenu_item_n(menu_item_t *items_f, int n)
+static menu_item_t *_libmenu_item_n(menu_item_t *items_f, int n)
 {
     for(; n > 0; n--)
         items_f = items_f->next;
@@ -293,7 +296,7 @@ menu_item_t *_libmenu_item_n(menu_item_t *items_f, int n)
 
 /* Trouve un item sélectionnable, avant celui spécifié si possible
  * Si current_item est -1, retourne -1 */
-int _libmenu_selectable_item_before(menu_t *menu, int current_item)
+static int _libmenu_selectable_item_before(menu_t *menu, int current_item)
 {
     int pos = 0;
     menu_item_t *item = menu->items_f;
@@ -316,7 +319,7 @@ int _libmenu_selectable_item_before(menu_t *menu, int current_item)
 
 /* Trouve un item sélectionnable, après celui spécifié si possible
  * Attention : current_item peut être -1 !*/
-int _libmenu_selectable_item_after(menu_t *menu, int current_item)
+static int _libmenu_selectable_item_after(menu_t *menu, int current_item)
 {
     int pos = current_item + 1;
     menu_item_t *item;
