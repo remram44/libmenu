@@ -58,6 +58,27 @@ void menu_positionnement()
 
 int main(void)
 {
-    menu_positionnement();
+    menu_t *menu = menu_push("Tests et diagnostics de la carte FPGA");
+
+    menu_item_t *i_pos = menu_newitem(menu, MENU_ITEM_BUTTON);
+    menu_setitem(i_pos,
+            "Lecture de la position des roues codeuses et du GPS");
+    menu_item_t *i_comm = menu_newitem(menu, MENU_ITEM_BUTTON);
+    menu_setitem(i_comm, "Commande directe des moteurs");
+    menu_newitem(menu, MENU_ITEM_LABEL);
+    menu_item_t *i_quit = menu_newitem(menu, MENU_ITEM_BUTTON);
+    menu_setitem(i_quit, "Quitter");
+
+    menu_item_t *ret = NULL;
+    do {
+        if(ret == i_pos)
+            menu_positionnement();
+
+        ret = menu_wait(menu, -1);
+    }
+    while(ret != i_quit && ret != MENU_QUIT);
+
+    menu_pop(menu);
+
     return 0;
 }
